@@ -1,7 +1,10 @@
 package com.example.ticketing_system_project.domain.auth.controller;
 
+import com.example.ticketing_system_project.domain.auth.dto.LoginRequestDto;
 import com.example.ticketing_system_project.domain.auth.dto.SignUpRequestDto;
+import com.example.ticketing_system_project.domain.auth.dto.TokenResponseDto;
 import com.example.ticketing_system_project.domain.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,15 +18,12 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public String signup(@RequestBody SignUpRequestDto dto) {
-// 이 로그가 콘솔에 찍히는지 반드시 확인해야 합니다.
-        System.out.println("========= 요청 들어옴 =========");
-        System.out.println("Email: " + dto.getEmail());
+    public String signup(@Valid @RequestBody SignUpRequestDto dto) {
         return userService.signup(dto);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody SignUpRequestDto dto) {
+    public TokenResponseDto login(@Valid @RequestBody LoginRequestDto dto) {
         return userService.login(dto);
     }
 }
