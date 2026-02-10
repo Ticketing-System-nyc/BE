@@ -1,11 +1,12 @@
 package com.example.ticketing_system_project.domain.user.service;
 
 import com.example.ticketing_system_project.domain.auth.dto.LoginRequestDto;
-import com.example.ticketing_system_project.domain.auth.dto.LoginResponseDto;
 import com.example.ticketing_system_project.domain.auth.dto.SignUpRequestDto;
+import com.example.ticketing_system_project.domain.auth.dto.SignUpResponseDto;
 import com.example.ticketing_system_project.domain.auth.dto.TokenResponseDto;
 import com.example.ticketing_system_project.domain.user.entity.User;
 import com.example.ticketing_system_project.domain.user.repository.UserRepository;
+import com.example.ticketing_system_project.global.exception.custom.DuplicateEmailException;
 import com.example.ticketing_system_project.global.exception.custom.InvalidPasswordException;
 import com.example.ticketing_system_project.global.exception.custom.UserNotFoundException;
 import com.example.ticketing_system_project.global.security.JwtTokenProvider;
@@ -23,21 +24,41 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-
-    public String signup(SignUpRequestDto dto) {
+    @Transactional
+    public SignUpResponseDto signup(SignUpRequestDto dto) {  // 반환 타입 변경
         // 이메일 중복 검사
         if (userRepository.existsByEmail(dto.getEmail())) {
-            return "이미 존재하는 이메일입니다.";
+            throw new DuplicateEmailException("이미 존재하는 이메일입니다: " + dto.getEmail());  // 예외 던지기
         }
+
+        // User 엔티티 생성
         User user = new User();
         user.setEmail(dto.getEmail());
-        // 암호화 적용: passwordEncoder.encode() 사용
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setName(dto.getName());
+        user.setRole(User.Role.USER);  // Role 설정 추가
 
-        userRepository.save(user);
-        return "회원가입 성공";
+        // 저장
+        User savedUser = userRepository.save(user);
+
+        // SignUpResponseDto 반환
+        return SignUpResponseDto.from(savedUser);  // DTO 반환
     }
+
+//    public String signup(SignUpRequestDto dto) {
+//        // 이메일 중복 검사
+//        if (userRepository.existsByEmail(dto.getEmail())) {
+//            return "이미 존재하는 이메일입니다.";
+//        }
+//        User user = new User();
+//        user.setEmail(dto.getEmail());
+//        // 암호화 적용: passwordEncoder.encode() 사용
+//        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+//        user.setName(dto.getName());
+//
+//        userRepository.save(user);
+//        return "회원가입 성공";
+//    }
 
     // 로그인 성공 시 TokenResponseDto(accessToken, refreshToken)를 반환
     @Transactional
